@@ -1,0 +1,559 @@
+---
+title: "Formação Cientista de Dados"
+subtitle: "Dia 01 - Tarde - Tipos de Dados"
+author: "Vítor Wilher"
+output: 
+  beamer_presentation:
+    #theme: "Boadilla"
+    slide_level: 2
+    fig_width: 8
+    fig_height: 4
+    fig_caption: true
+    citation_package: 'natbib'
+    includes:
+      in_header: beamer.txt
+      before_body: toc.txt
+bibliography: 'references.bib'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+```
+
+
+# Dados Univariados
+## Dados Univariados
+
+O \(\mathbf{R}\) possui cinco classes básicas (ou \emph{atômicas}) de objetos, a saber: \emph{character}, \emph{numeric}, \emph{integer}, \emph{complex} e \emph{logical}. Os objetos no \(\mathbf{R}\), por sua vez, são divididos em algumas \texttt{estruturas de dados}, a saber: \emph{vetores atômicos}, \emph{matrizes}, \emph{arrays}, \emph{listas} e \emph{data frames}. Cada uma dessas estruturas possui características próprias, servindo a determinados tipos de dados. Elas podem, entretanto, ser organizadas, como propõe \cite{advancedR}, pela \emph{dimensionalidade} e pelo fato de poderem receber dados homogêneos (todos os elementos precisam ser do mesmo tipo) ou heterogêneos, da seguinte forma: 
+
+## Dados Univariados
+
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+	\hline  & Homogêneos  & Heterogêneos  \\ 
+	\hline  1d & Atomic Vector  & List  \\ 
+	\hline  2d & Matrix  & Data frame  \\ 
+	\hline  nd & Array  &  \\ 
+	\hline 
+\end{tabular} 
+\end{center}
+
+
+## Dados Univariados
+
+O mais básico tipo de objeto no \(\mathbf{R}\) é o \texttt{vetor}. Vetores podem ser de dois tipos: \texttt{vetores atômicos} ou \texttt{listas}. Eles possuem três propriedades comuns:
+
+\begin{itemize}
+
+  \item Tipo, \texttt{typeof()}, o que é;
+  \item Tamanho, \texttt{length()}, quantos elementos possui;
+  \item Atributos, \texttt{attributes()}, metadados arbitrários adicionais.
+
+\end{itemize}
+
+## Dados Univariados
+
+A diferença entre eles, como visto acima, é que todos os elementos em um vetor atômico precisam ser da mesma classe, enquanto na lista, não necessariamente. Abaixo um exemplo de vetor numérico de tamanho 10 no \(\mathbf{R}\).
+
+```{r, echo=T, eval=T, results='asis', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+x = seq(1:10) # criando uma sequência de 1 a 10
+vetor = rnorm(x, 34, 12) # geração aleatório de números
+class(vetor) # verificando a classe do objeto
+length(vetor) # verificando o tamanho do objeto
+typeof(vetor) # o tipo do objeto
+str(vetor) # A estrutura do objeto
+
+```
+
+## Dados Univariados
+
+Sobre um vetor, é possível fazer operações de \emph{redução} ou de \emph{vetorização}, como abaixo.
+
+```{r, echo=T, eval=T, results='asis', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+sum(vetor)/length(vetor) # Obtendo a média dos dados
+vetor - mean(vetor) # O quanto cada observação se distancia da média
+
+```
+
+No primeiro caso, estamos fazendo uma operação que irá resultar em único número. Já no segundo, estamos fazendo uma operação com cada elemento do vetor, o que naturalmente irá resultar em um novo vetor. 
+
+## Dados Univariados
+
+Vamos avançar um pouco no entendimento e manipulação dessa estrutura básica no \(\mathbf{R}\) por meio de um exemplo mais real. Para isso, precisamos instalar o pacote \texttt{UsingR}, que acompanha o livro \cite{usingR}, nossa referência bibliográfica básica nesse curso. O código abaixo ilustra a instalação e posterior carregamento do pacote.\footnote{Caso tenha dificuldades nesse processo, dê uma olhada na primeira seção da apostila.}
+
+```{r, echo=T, eval=F, results='asis', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+install.packages('UsingR')
+require(UsingR)
+
+```
+
+## Dados Univariados
+
+Feito isso, podemos acessar todos os \texttt{data sets} do pacote com o comando abaixo. 
+
+```{r, echo=T, eval=F, results='asis', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+data(package='UsingR')
+
+```
+
+
+## Dados Univariados
+
+Escolhemos \emph{brincar} com o \emph{data set} \texttt{coldvermont}, que traz a temperatura mínima diária, em \emph{Fahrenheit}, em Woodstock Vermont entre os anos de 1980 e 1985.  
+
+```{r, echo=T, eval=T, results='asis', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+library(UsingR)
+class(coldvermont)
+
+```
+
+
+Observe que a classe do objeto é \texttt{ts}, de série temporal. Podemos, para facilitar a interpretação, passar de graus Fahrenheit para graus Celsius, através da fórmula abaixo. 
+
+## Dados Univariados
+
+```{r, echo=T, eval=T, results='asis', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+coldvermont = round((coldvermont-32)/1.8,0)
+
+```
+
+
+## Dados Univariados
+
+E abaixo, plotamos um gráfico rápido do nosso conjunto de dados. 
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+plot(coldvermont)
+
+```
+
+## Dados Univariados
+
+Observe que as temperaturas mínimas apresentam uma \emph{sazonalidade} ao longo do ano. Isto é, elas aumentam durante a primeira metade e diminuem na segunda metade do ano. 
+
+# Medidas de tendência central
+## Medidas de tendência central
+
+De modo a compreender melhor o nosso conjunto de dados \texttt{coldvermont}, podemos agora fazer uso de algumas estatísticas descritivas, tais como as de \textbf{medida central}, \textbf{amplitude} e \textbf{forma}. Para começar, vamos verificar a média e a mediana do nosso conjunto de dados.\footnote{Observe que estamos utilizando o argumento \emph{na.rm}, de modo a ignorar os valores faltantes (\emph{missing values}) dentro da nossa amostra.}
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+mean(coldvermont, na.rm=TRUE)
+median(coldvermont, na.rm=TRUE)
+
+```
+
+## Medidas de tendência central
+
+Enquanto a média do nosso conjunto de dados é `r round(mean(coldvermont, na.rm=TRUE),2)`, a mediana é `r median(coldvermont, na.rm=TRUE)`. A mediana, por suposto, divide a amostra em dois, isto é, valores menores do que ela e valores maiores do que ela. Em termos gerais, podemos dividir a amostra em \emph{quantis}, de forma a estabelecer \emph{medidas de posição}, tais como:
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+quantile(coldvermont, seq(0,1,0.25), na.rm=TRUE)
+
+```
+
+## Medidas de tendência central
+
+Observe que o primeiro quartil da nossa amostra vai até a temperatura -7 graus Celsius, enquanto o terceiro quartil vai até 8 graus Celsius. Uma outra medida importante para analisarmos o nosso conjunto de dados é a \textbf{moda}, isto é, o valor mais frequente que podemos encontrar. Não há uma função direta no R que faz isso, infelizmente. Mas podemos brincar um pouco para descobrir. Podemos usar a função \texttt{table} de modo a tabular o número de vezes que cada temperatura ocorre na nossa amostra. Fazemos isso com o código abaixo. Para calculá-lo no R, podemos utilizar o código abaixo. 
+
+## Medidas de tendência central
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+plot(table(coldvermont))
+
+```
+
+
+## Medidas de tendência central
+
+Fica fácil visualizar que o número -1 é a temperatura mais comum no nosso conjunto de dados. De modo a obter esse número, podemos utilizar a linha de código abaixo. 
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+as.numeric(names(which(table(coldvermont)==max(table(coldvermont)))))
+
+```
+
+
+# Medidas de dispersão e formatos de distribuição
+## Medidas de dispersão e formatos de distribuição
+
+A amplitude ou variabilidade de um conjunto de dados é uma importante característica. Uma medida simples disso poderia ser o intervalo de um determinado conjunto de dados, que nada mais é do que a distância entre o mínimo e o máximo. Isto é, 
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+c(min(coldvermont, na.rm=TRUE), max(coldvermont, na.rm=TRUE))
+
+```
+
+## Medidas de dispersão e formatos de distribuição
+
+Nosso conjunto de temperaturas \emph{varia} assim de `r min(coldvermont, na.rm=TRUE)` a `r max(coldvermont, na.rm=TRUE)`, sendo o valor mais comum `r as.numeric(names(which(table(coldvermont)==max(table(coldvermont)))))`, a média `r round(mean(coldvermont, na.rm=TRUE),2)` e a mediana `r median(coldvermont, na.rm=TRUE)`. Pode ser chato, ademais, toda hora ter de aplicar o argumento \emph{na.rm} nas funções. Nesse caso, podemos simplesmente retirar os valores faltantes do nosso conjunto de dados com o comando abaixo.
+
+## Medidas de dispersão e formatos de distribuição
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+coldvermont = coldvermont[complete.cases(coldvermont)]
+
+```
+
+## Medidas de dispersão e formatos de distribuição
+
+Os dados \emph{sumarizados} acima, podem, ademais, ser obtidos de forma direta com a função \emph{summary}, como abaixo. 
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+summary(coldvermont)
+
+```
+
+## Medidas de dispersão e formatos de distribuição
+
+A distância entre o menor e o maior valor de um conjunto de dados também pode ser visto de forma direta com a função \texttt{range}, como abaixo.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+range(coldvermont)
+diff(range(coldvermont))
+
+```
+
+Já a diferença entre o primeiro e o terceiro quartil, denominado como \emph{Interquartile Range (IQR)}, pode ser obtido da seguinte forma.
+
+## Medidas de dispersão e formatos de distribuição
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+IQR(coldvermont)
+
+```
+
+Esses cinco valores de um conjunto de dados, ademais, pode ser visualizado de forma direta por meio de \emph{boxplots}. No R, está implementado na função de mesmo nome, como abaixo.
+
+## Medidas de dispersão e formatos de distribuição
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+boxplot(coldvermont, 
+        main='Boxplot das temperaturas mínimas em Vermont',
+        horizontal=TRUE)
+
+```
+
+## Medidas de dispersão e formatos de distribuição
+
+Uma outra forma de visualizar a amplitude do nosso conjunto de dados é através de \emph{histogramas}, como abaixo.
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+hist(coldvermont)
+
+```
+
+## Medidas de dispersão e formatos de distribuição
+
+Através do boxplot e do histograma, a propósito, é possível ilustrar a \textbf{forma} como as observações de um determinado conjunto de dados se distribui. Elas podem apresentar, basicamente, três formatos: distribuição simétrica, uma assimetria à esquerda e uma assimetria à direita. No caso das temperaturas diárias mínimas de Vermont, vemos claramente uma assimetria à esquerda.\footnote{Alguns livros se referem a isso como \textbf{assimetria negativa}.} É o caso típico quando a média é menor do que a mediana.\footnote{Quando a média é maior do que a mediana, ocorre uma \emph{assimetria à direita}. Já quando a média é igual a mediana, ocorre uma simetria.}
+
+
+# Variância e desvio-padrão
+## Variância e desvio-padrão
+
+Por fim, de modo a identificar melhor a variabilidade de um determinado conjunto de dados, podemos calcular a distância entre uma determinada observação e a média do mesmo. De forma a considerar esses desvios independentes do sinal, devemos somar os desvios ao quadrado, controlando pelo tamanho da amostra. Isto é, \begin{align} s^2 = \frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{x})^2 \end{align} De modo que, quanto mais espalhado for o conjunto de dados, maior será a sua \textbf{variância}. Podemos, ademais, padronizar a unidade de medida através da raiz quadrada da variância, o que dará o \textbf{desvio-padrão}. No R, isso é facilmente implementado conforme o código abaixo.
+
+## Variância e desvio-padrão
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+var(coldvermont)
+sd(coldvermont)
+
+```
+
+Quanto maiores forem os valores para a variância, mais amplo será o espalhamento dos dados em relação à média. Já o desvio-padrão indica, em média, quanto cada valor se diferencia da média. 
+
+# Dados categóricos
+## Dados categóricos
+
+Sumarizar dados categóricos é algo bastante direto. A ferramenta básica é \textbf{tabular} os valores e apresentá-los, seja de forma gráfica ou descritiva. Para ilustrar, vamos considerar a variável \texttt{smoke} no conjunto de dados \texttt{babies}, que representa a condição de fumante entre mães.\footnote{Os códigos utilizados estão disponíveis na ajuda do conjunto de dados.} 
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+x = babies$smoke
+x = factor(x, labels=c('nunca', 'fuma agora', 'até ficar grávida', 
+                       'já, hoje não', 'desconhecido'))
+table(x)
+```
+
+
+## Dados categóricos
+
+Como podemos ver, a função \texttt{table} relaciona cada categoria à frequência encontrada. Podemos visualizar isso através de um gráfico de barras, como abaixo. 
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+barplot(table(x), 
+        col='red', main='Condição de fumante entre mães',
+        horiz = FALSE)
+
+```
+
+
+# Dados Bivariados
+## Dados Bivariados
+
+Nessa seção, veremos os conjuntos de dados bivariados, dados envolvendo duas variáveis. Quando estamos tratando desse tipo de conjunto, nós podemos indagar se há relação entre as variáveis analisadas. Para \emph{amostras independentes}, nós podemos nos perguntar se diversas métricas, como medidas centrais, de variabilidade ou forma são similares ou diferentes. Já para \emph{dados emparelhados}, podemos verificar a existência ou ausência de relacionamento entre as variáveis.
+
+# Amostras Independentes
+## Amostras Independentes
+
+Um experimento estatístico bastante comum consiste em separar uma determinada coorte em grupos de controle e de tratamento. Enquanto o grupo de tratamento recebe algum tipo de tratamento, o de controle não recebe nada. Depois, medidas para cada um dos grupos são tomadas. De modo a controlar o viés ao separar a coorte, uma alocação aleatória costuma ser utilizada. Esse tipo de procedimento leva a independência - onde o conhecimento sobre a performance de um determinado participante não sugere nada sobre outro. Ademais, para controlar o \emph{efeito placebo}, o grupo de controle geralmente recebe algum tratamento, mas que não é esperado ter qualquer efeito. 
+
+## Amostras Independentes
+
+Por exemplo, suponha que estamos investigando quais alimentos podem ter impacto sobre a performance esportiva. O grupo de tratamento foi alimentado com $\frac{3}{2}$ copos de beterraba 75 minutos antes de uma atividade física, enquanto o grupo de controle não foi. A atividade física foi uma corrida cronometrada. O pesquisador acredita que o nitrato encontrado na beterraba ampliaria os vasos sanguíneos do indivíduo, aumentando o fluxo sanguíneo nos músculos exercicitados, diminuindo o tempo de duração da atividade. Suponha que as medidas em minutos das atividades sejam dadas por: 
+
+\bigskip
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|c|}
+	\hline \texttt{Beterrabas}  & 41  & 40  & 41  & 42  & 44  & 35  & 41  & 36  & 47  & 45  \\ 
+	\hline \texttt{Sem Beterrabas} & 51  & 51  & 50  & 42  & 40 & 31  & 43  & 45  &  &  \\ 
+	\hline 
+\end{tabular} 
+\end{center}
+\bigskip
+
+## Amostras Independentes
+
+O que podemos dizer sobre esses dados? Os três maiores tempos estão no grupo \emph{sem beterrabas}, mas este também possui o menor tempo. Algumas questões pertinentes:
+
+\begin{itemize}
+
+  \item Os dados parecem ter sido extraídos da mesma população, os dois possuem a mesma forma?
+  
+  \item Os dados parecem ter as mesmas medidas centrais e de variabilidade?
+
+\end{itemize}
+
+## Amostras Independentes
+
+Vamos para o \(\mathbf{R}\) responder essas questões...
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+beets = c(41,40,41,42,44,35,41,36,47,45)
+nobeets = c(51,51,50,42,40,31,43,45)
+
+c(media_beets=mean(beets), media_nobeets=mean(nobeets),
+  sd_beets=sd(beets), sd_nobeets=sd(nobeets))
+
+```
+
+## Amostras Independentes
+
+O grupo que recebeu as beterrabas possui uma média de 3 minutos a menos do que o grupo de controle, com uma variabilidade menor. Se essa diferença se dá por termos corredores mais rápidos no grupo de tratamento ou se é resultado da ingestão das beterrabas, nós não sabemos. 
+
+## Amostras Independentes
+
+Assim como na análise univariada, pode ser importante visualizar os dados. 
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+library(aplpack)
+stem.leaf.backback(beets, nobeets, rule.line='Sturges')
+
+```
+
+
+## Amostras Independentes
+
+Os lados mais à esquerda e à direita registram a posição da observação no conjunto de dados, as hastes ficam no meio. Após focarmos no meio, percebe-se que o grupo de controle (sem beterrabas) possui maior variabilidade, mas a diferença no centro não é tão óbvia. De forma a complementar a análise, colocamos abaixo um \texttt{boxplot}. Observamos medianas diferentes, mas ambas estão dentro da amplitude da outra. A ideia de olhar as diferenças no centro de uma escala determinada pela amplitude é a chave para a inferência estatística. 
+
+## Amostras Independentes
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+boxplot(nobeets, beets, names=c('No Beets', 'Beets'),
+        horizontal = TRUE)
+
+```
+
+# Gráficos de densidade
+## Gráficos de densidade
+
+Gráficos de densidade são semelhantes aos \texttt{histogramas} que vimos na seção anterior, mas difere por permitir que mostremos dois ou mais conjuntos de dados. Vamos considerar o conjunto de dados \texttt{michelson} do pacote \texttt{MASS}, que contém medidas de velocidade da luz no ar produzidas por Michelson em 1879. O conjunto de dados contém cinco experimentos. Nós comparamos o quarto e quinto abaixo.
+
+## Gráficos de densidade
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+library(MASS)
+speed <- michelson$Speed; expt <- michelson$Expt
+fourth <- speed[expt==4]
+fifth <- speed[expt==5]
+d_4 <- density(fourth)
+d_5 <- density(fifth)
+xrange <- range(c(d_4$x, d_5$x))
+yrange <- range(c(d_4$y, d_5$y))
+plot(d_4, xlim=xrange, ylim=yrange, xlab='densities', main='')
+lines(d_5, lty=2)
+
+```
+
+
+# Manipulação de Dados no \(\mathbf{R}\)
+## Manipulação de Dados no \(\mathbf{R}\)
+
+O \(\mathbf{R}\) possui duas estruturas que podem simplificar o trabalho com dados bivariados: listas e data frames. As listas têm uma vantagem sobre vetores atômicos, como vimos, por permitir a alocação de dados com categorias diferentes. Podemos construí-las com o código abaixo.
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+beets = c(41,40,41,42,44,35,41,36,47,45)
+nobeets = c(51,51,50,42,40,31,43,45)
+
+b = list(beets=beets, 'no beets'=nobeets)
+b
+
+```
+
+
+## Manipulação de Dados no \(\mathbf{R}\)
+
+As listas, a propósito, podem ser subdivididas.
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+b$beets
+b$`no beets`
+b[1]
+b[2]
+b[[1]][1]
+
+```
+
+## Manipulação de Dados no \(\mathbf{R}\)
+
+E facilitam a construção do \emph{boxplot}.
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+boxplot(b)
+
+```
+
+## Manipulação de Dados no \(\mathbf{R}\)
+
+\texttt{Data frames}, por sua vez, são uma forma muito utilizada para armazenar variáveis, de forma que as colunas representam variáveis e as observações ficam nas linhas. Abaixo um exemplo.
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+student = c('Alice', 'Bob')
+grade = c('A', 'B')
+attendance = c('awesome', 'bad')
+data = data.frame(student, grade, attendance)
+data
+```
+
+
+# Dados Emparelhados
+## Dados Emparelhados
+
+Considere o conjunto de dados \texttt{fat} do pacote \texttt{UsingR} que contém medidas de diferentes dimensões do corpo de uma coorte de 252 homens. O objetivo desse conjunto de dados foi o de verificar se alguma previsão do índice de gordura corporal pode ser feita a partir de algumas variáveis que podem ser obtidas a partir de uma fita métrica. Para esse exemplo particular, estamos interessados apenas nas relações entre as variáveis. 
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+library(UsingR)
+names(fat)
+
+```
+
+
+## Dados Emparelhados
+
+E abaixo um primeiro \texttt{gráfico de correlação} entre as medidas do pulso (\emph{wrist}) e do pescoço (\emph{neck}).
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+par(mfrow=c(1,2))
+plot(fat$wrist, fat$neck)
+plot(neck~wrist, data=fat, subset= 20 <= age & age < 30)
+```
+
+
+## Dados Emparelhados
+
+A correlação é um sumário numérico que diz o quão perto estão relacionadas as medidas de duas variáveis numéricas quando elas estão uma relação linear. O \emph{coeficiente de correlação de Pearson} pode ser definido como \begin{align} cor(x,y) = \frac{1}{n-1} \sum \begin{pmatrix} \frac{x_i - \bar{x}}{s_x} \end{pmatrix} \begin{pmatrix} \frac{y_i - \bar{y}}{s_y} \end{pmatrix} \end{align} de modo que o número permaneça no intervalo entre $1$ e $-1$, representando, respectivamente, perfeita correlação positiva e negativa. Se o número for $0$, por outro lado, isso significa que as variáveis são perfeitamente não correlacionadas. 
+
+
+# Dados Multivariados
+## Dados Multivariados
+
+Um processo de análise de dados típico consiste em algumas etapas: tratamento dos dados, transformação dos dados, visualização exploratória, sumários numéricos e modelagem. Aprender de modo eficiente a como trabalhar no R com \texttt{data frames} torna essas etapas muito mais diretas e gerenciáveis. Nessa seção, aprenderemos sobre como trabalhar com \texttt{data frames}. 
+
+# Trabalhando com data frames
+## Trabalhando com data frames
+
+\texttt{Data frames} se situam na fronteira entre matrizes e listas de modo que nós temos duas interfaces para trabalhar dentro da mesma estrutura. Ademais, é possível utilizar determinadas funções para tornar o gerenciamento dessa estrutura de dados ainda mais conveniente. Vamos organizar nossa discussão em alguns aspectos, como se segue. 
+
+## Trabalhando com data frames
+
+Data frames são listas de variáveis. Eles podem ser construídos como se segue.
+
+```{r, echo=T, eval=F, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+df = data.frame(nm1=vec1, nm2=vec2)
+
+```
+
+## Trabalhando com data frames
+
+A combinação \texttt{key=value} equivale às colunas, enquanto as linhas são criadas automaticamente. Observe, por suposto, que os vetores precisam ter o mesmo tamanho para estarem no mesmo data frame. Com a função \texttt{as.data.frame} é possível ainda forçar uma estrutura a ser um data frame. 
+
+# Pesquisa de dados
+## Pesquisa de dados
+
+É possível acesssar as variáveis de um data frame através da notação $\$$, da seguinte forma:
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+data(mtcars)
+mtcars$mpg
+
+```
+
+## Pesquisa de dados
+
+É possível ainda pesquisar dados como em matrizes, da seguinte forma:
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+mtcars[,1]
+
+```
+
+## Pesquisa de dados
+
+Ou fazer operações dentro do mesmo data frame com a função \texttt{with}:
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+with(mtcars, mean(mpg) - sd(mpg))
+
+```
+
