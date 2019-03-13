@@ -1,6 +1,6 @@
 ---
 title: "Formação Cientista de Dados"
-subtitle: "Dia 03: Análise de Regressão (Seções 12, 13 e 14)"
+subtitle: "Dia 03: Análise de Regressão (Seções 12 e 13)"
 author: "Vítor Wilher"
 output: 
   beamer_presentation:
