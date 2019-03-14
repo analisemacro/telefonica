@@ -1,0 +1,605 @@
+---
+title: "Formação Cientista de Dados"
+subtitle: "Dia 04 - Manhã: Seções 13, 14 e 15"
+author: "Vítor Wilher"
+output: 
+  beamer_presentation:
+    #theme: "Boadilla"
+    slide_level: 2
+    fig_width: 8
+    fig_height: 4
+    fig_caption: true
+    citation_package: 'natbib'
+    includes:
+      in_header: beamer.txt
+      before_body: toc.txt
+bibliography: 'references.bib'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+```
+
+
+
+# Análise de Variância
+## Análise de Variância
+
+\textbf{Análise de Variância de um sentido}
+
+\bigskip
+
+Uma análise de variância de um sentido é uma generalização do teste $t$ para duas amostras independentes, nos permitindo comparar médias populacionais de várias amostras independentes. Suponha que temos $k$ populações de interesse e de cada uma destas tirados uma amostra aleatória. Vamos notar que para a $i$-ésima amostra, $x_{in}$ será o $n$-ésimo elemento dessa amostra. 
+
+## Análise de Variância
+
+Suponha que a média da $i$-ésima popualação é $\mu_i$ e seu desvio-padrão é $\sigma_i$ - que será simplesmente $\sigma$ se o desvio-padrão for consistente entre os grupos. Um modelo estatístico para os dados com um desvio-padrão comum seria:
+
+\begin{align}
+x_{ij} = \mu_i + \epsilon_{ij}
+\end{align}
+
+## Análise de Variância
+
+onde os termos de erro $\epsilon_{ij}$ são independentes, normalmente distribuídos com média zero e variância $\sigma^2$. 
+
+\bigskip
+
+Se quisermos testar se várias amostras têm uma mesma média, podemos considerar o modelo linear apresentado. Ao estima-lo, teremos SQT e SQR, dos quais podemos construir uma estatística que já vimos, a F:
+
+\begin{align}
+F = \frac{SQT/ (k-1)}{SQR / (n-k)} \thicksim F_{(k-1),(n-K)}
+\end{align}
+
+
+## Análise de Variância
+
+Como conhecemos a distribuição F com $(k-1)$ e $(n-K)$ graus de liberdade, podemos realizar um teste de hipótese para as médias de cada amostra, em que a hipótese nula é de que são todas iguais e a alternativa alguma negativa disso. A função oneway.test implementa esse teste no R.
+
+\bigskip
+
+É conveniente usar fatores para fazer esses testes. Se armazenamos a variável que indica em qual das $i$ amostras está a observação como um fator "f", então podemos especificar o teste como $x \sim f$ que o R interpretará isso corretamente. Uma outra função para implementar análise de variância é "aov". 
+
+## Análise de Variância
+
+Considere $15$ sujeitos divididos em $3$ grupos. Cada grupo é designado para um mês e coletamos quantas calorias são consumidas por cada indivíduo. A pergunta: será que a quantidade de calorias consumidas é maior em alguns meses e menor em outros? Ou será que são iguais? Podemos manualmente computar um teste F:
+
+```{r, echo=T, eval=T, results='markup', fig.cap='Reta de Regressão', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+maio = c(2166, 1568, 2233, 1882, 2019)
+setembro = c(2279, 2075, 2131, 2009, 1793)
+dezembro = c(2226, 2154, 2583, 2010, 2190)
+xmedia = mean(c(maio, setembro, dezembro))
+
+```
+
+## Análise de Variância
+
+```{r, echo=T, eval=T, results='markup', fig.cap='Reta de Regressão', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+SQT = 5*((mean(maio)-xmedia)^2+(mean(setembro)-xmedia)^2+(mean(dezembro)-xmedia)^2)
+SQT ## soma dos quadrados totais
+SQE = (5-1)*var(maio)+(5-1)*var(setembro)+(5-1)*var(dezembro)
+SQE # soma dos quadrados explicados
+F.obs=(SQT/(3-1)) / (SQE/(15-3)) #computamos a estatistica F
+pf(F.obs,3-1,15-3, lower.tail = FALSE) # achamos p-valor do teste
+```
+
+
+## Análise de Variância
+
+O p-valor não é significativo a $5\%$, o que indica que as médias de consumo dos dados coletados não são diferentes em diferentes meses do ano. Portanto, a diferença observada é atribuída à amostragem.
+
+## Análise de Variância
+
+Podemos avaliar isso com um ANOVA, pela função ``oneway.test()``. Precisamos antes criar um dataframe com as medidas e um fator indicando de que mês cada medida é. Felizmente - e para nossa conveniência -  a função ``stack()`` faz exatamente isso. Basta alimentar à ela um objeto de classe ``list`` com nomes que ela devolve um objeto de classe ``data.frame`` apropriado.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='Reta de Regressão', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+d = stack(list(maio = maio, 
+                setembro = setembro,
+                dezembro = dezembro))
+names(d) #retornando dois valores
+oneway.test(values ~ ind, data = d, var.equal = TRUE) 
+```
+
+Encontramos o mesmo p-valor, como esperado. 
+
+## Análise de Variância
+
+Podemos também usar a função ``aov()`` para realizar um ANOVA.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='Reta de Regressão', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+anova = aov(values ~ ind, data = d)
+summary(anova)  
+```
+
+Essas são três maneiras de computar um teste de um sentido.
+
+
+## Análise de Variância
+
+\textbf{Comparando múltiplas diferenças}
+
+\bigskip
+
+Quando a análise de variância é executada com a função "lm", a saída do resumo exibe inúmeros testes estatísticos. O teste F realizado é para a hipótese nula de que $\beta_2 = \beta_3 = ··· = \beta_k = 0$ contra uma alternativa que um ou mais parâmetros diferem de 0. Ou seja, que uma ou mais das variáveis tem efeitos de tratamento em comparação com o nível de referência. Os testes t marginais que são executados são testes de dois lados com uma hipótese nula de que $\beta_i = \beta_1$, cada um é feito para $i = 2, 3, ..., k$. Estes testam se algum dos tratamentos adicionais tem um efeito de tratamento quando controlado pelas outras variáveis. 
+
+
+## Análise de Variância
+
+No entanto, podemos querer fazer outras perguntas sobre os vários parâmetros. Por exemplo, comparações que não são informadas por padrão são testes mais específicos como $\beta_2$ e  $\beta_3$ diferem? e $\beta_1$ e $\beta_2$ são metade de $\beta_3$?. Vamos avaliar agora diferentes múltiplas de parâmetros.
+
+## Análise de Variância
+
+Se sabemos de antemão que estamos procurando uma diferença entre dois parâmetros, então um teste $t$ simples é apropriado (como no caso em que estamos considerando apenas duas amostras independentes). No entanto, se olharmos para os dados e depois decidirmos para testar se o segundo e terceiro parâmetros diferem, então o nosso teste $t$ é instável. Por quê? Lembre-se de que qualquer teste está correto apenas com alguma probabilidade, mesmo que os modelos estejam corretos. Isso significa que às vezes eles falham e quanto mais testes realizamos, mais provavelmente um ou mais falhará. 
+
+## Análise de Variância
+
+Podemos, por exemplo, nos perguntar se linhas aéreas diferentes estão sujeitas a tempos diferentes de espera em um mesmo aeroporto. Vamos usar os dados da base ``ewr``, contida no pacote ``UsingR`` e nossas ferramentas para averiguar isso.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='Reta de Regressão', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+library(UsingR)
+data("ewr")
+head(ewr)
+ewr.saidas = subset(ewr, subset=  inorout == "out", select = 3:10) # só saídas
+saidas = stack(ewr.saidas) # usando stack()
+names(saidas) = c("tempo", "empresa")  #nomeando o dataframe
+# agora rodamos um modelo linear com fatores
+reg = lm(tempo ~ empresa, data = saidas)
+
+
+```
+
+## Análise de Variância
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+summary(reg) 
+
+
+```
+
+## Análise de Variância
+
+Encontramos alguns parâmetros estatisticamente significantes e a regressão como um todo é significante - como aponta a estatística F. A empresa CO tem um tempo maior de espera, a NW menor, por exemplo. 
+
+
+## Análise de Variância
+
+\textbf{ANCOVA}
+
+\bigskip
+
+Análise de Covariância (ANCOVA) é o nome dado aos modelos em que tanto variáveis categóricas quanto numéricas são usadas como preditoras. Também rodamos ANCOVAs com a função "lm". Para comparar a performance de dois modelos dessa maneira, precisamos estimar dois modelos lineares, salva-los como objetos no R e depois alimentá-los à função "anova".
+
+## Análise de Variância
+
+Será que mães fumantes têm bebês com menor peso? Vamos usar os dados da base ``babies``, do pacote ``UsingR`` e ANCOVAs para responder isso.
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+data(babies)
+reg = lm(wt ~ wt1 + factor(smoke), data = babies)
+# explicando peso do bebê com o peso da mãe e se fuma ou não
+reg2 = lm(wt ~ wt1, data = babies)
+# somente pelo peso da mãe
+anova(reg, reg2)
+
+```
+
+## Análise de Variância
+
+De fato, o p-valor baixíssimo apoia fortemente a hipótese de que hábitos de fumo de mães afetam o peso de seus filhos.
+
+
+# Duas Extensões do Modelo Linear
+## Duas Extensões do Modelo Linear
+
+As idéias de regressão linear são blocos de construção para muitos outros modelos estatísticos. O repositório da Fundação R contém centenas de pacotes com adições, muitos dos quais implementam extensões para o modelo de regressão linear abrangidos nos dois últimos capítulos. Neste capítulo analisamos duas extensões: modelos de regressão logística e modelos não-lineares. Nosso objetivo é ilustrar que a maioria das técnicas usadas para modelos lineares são transferidas para esses (e outros) modelos.
+
+\bigskip
+
+O modelo de regressão logística abrange a situação em que a variável de resposta é uma variável binária. Regressão logística, que é um caso particular de um Modelo Linear Generalizado, surge em diversas áreas, incluindo por exemplo, a análise de dados de pesquisas. Em modelos não-lineares discutimos usar uma função para descrever a resposta média que não é linear nos parâmetros. 
+
+
+## Duas Extensões do Modelo Linear
+
+\textbf{Modelos de Regressão Logística}
+
+\bigskip
+
+Uma variável binária é aquela que pode ter apenas dois valores, \emph{sucesso} ou \emph{falha}, muitas vezes codificado como 1 ou 0. No modelo ANOVA vimos que podemos usar variáveis binárias como preditores em um modelo de regressão linear usando fatores. E se quisermos usar um variável binária como uma variável de resposta?
+
+\bigskip
+
+Esse tipo de problema tipicamente surge quando estamos tentando classificar observações com um modelo. Dadas certas observações clínicas, um paciente tem que probabilidade de ter uma certa doença? Conseguimos inferir se um e-mail é spam ou não a partir de características objetivas do corpo do texto, se precisar de alguém para isso, somente com um modelo? Um cliente de um banco vai pedir um empréstimo ou não?
+
+## Duas Extensões do Modelo Linear
+
+Suponha que temos duas variáveis $X$ e $Y$, onde $Y$ é a variável de resposta, que assume $0$ ou $1$. Se escrevermos um modelo linear como vimos anteriormente, $Y_i = \beta_0 + \beta X_i + \epsilon_i$, precisamos impor seríssimas restrições no comportamento dos erros nesse modelo, que não podem mais ser normais. É melhor então trocar $Y_i$ pela probabilidade de $Y_i$ ser um sucesso, $\pi_i = P[Y_i = 1]$. Agora podemos escrever $\pi_i = \beta_0 + \beta X_i + \epsilon_i$. No entanto observe que apesar dos erros ficarem mais bem comportados, ainda não como gostaríamos. Enquanto a probabilidade varia entre $0$ e $1$, o lado direito da equação varia muito mais amplamente. 
+
+## Duas Extensões do Modelo Linear
+
+Se condicionarmos a $X_i$, então podemos trocar a probabilidade pelo valor esperado $E[Y_i | X_i] = \pi_i$. A última alteração necessária é como tratamos a regressão binária. Vamos quebrar o procedimento em dois passos. Primeiro, estimaremos $\eta = \beta_0 + \beta X_i + \epsilon_i$, então assumimos que podemos transformar $\eta$ para dar a média condicional de uma função $m()$, que chamamos de função de ligação. Quando $m = \frac{e^x}{1+e^x}$, dizemos que o modelo é de regressão logística. Resolvendo, teríamos:
+
+\begin{align}
+\pi_i = \frac{e^{\beta_0 + \beta X_i}}{1+e^{\beta_0 + \beta X_i}}
+\end{align}
+
+## Duas Extensões do Modelo Linear
+
+A função logística $m()$ transforma qualquer valor real em valores entre 0 e 1, de forma que seus valores possam ser lidos como probabilidades. Quando $m()$ é invertida, temos:
+
+\begin{align}
+\log{\frac{\pi_i}{1 - \pi_i}} = \beta_0 + \beta X_i
+\end{align}
+
+## Duas Extensões do Modelo Linear
+
+Esse termo em log é chamado \emph{log da razão de chances}. Para clarificar, as chances de uma probabilidade $p$ são $p/1-p$, e entendemos que se um evento tem chances $a$ em $b$ então se tivermos $a+b$ amostras, esperamos que o evento aconteça $a$ vezes.
+
+## Duas Extensões do Modelo Linear
+
+Imagine que você é agora um _spammer_. Seu objetivo é maximizar a probabilidade de pessoas abrirem seu e-mail e caírem no seu conto. Imagine que coletamos os seguintes dados sobre performance de e-mails spam enviados:
+
+
+|                 | Oferta no Assunto | Sim        | Não        |
+|-----------------|-------------------|------------|------------|
+| Nome no Assunto | Sim               | 20 de 1250 | 15 de 1250 |
+|                 | Não               | 17 de 1250 | 8 de 1250  |   
+ 
+
+Podemos usar regressão logística para entender melhor a performance de nossos e-mails.
+
+## Duas Extensões do Modelo Linear
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+#primeiro organizamos os dados
+nome = rep(1:0,c(2500,2500))
+oferta = rep(c(1,0,1,0),rep(1250,4)) 
+ 
+abriu = c(rep(1:0,c(20,1250-20)), 
+          rep(1:0,c(15,1250-15)), 
+          rep(1:0,c(17,1250-17)),
+          rep(1:0,c(8,1250-8))) 
+f = function(x) rep(1:0,c(x,1250-x))
+abriu = c(sapply(c(20,15,17,8),f)) # dados prontos
+# agora estimamos um modelo logit (regressão logística)
+reg = glm(abriu ~ factor(nome) + factor(oferta),
+              family = binomial(link = "logit"))
+```
+
+## Duas Extensões do Modelo Linear
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+summary(reg)
+
+```
+
+
+## Duas Extensões do Modelo Linear
+
+\textbf{Modelo Linear Generalizado}
+
+\bigskip
+
+Podemos escrever o Modelo Linear Generalizado como, em princípio: 
+
+\begin{align}
+\eta = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + ... + \beta_k X_k
+\end{align}
+
+A média de $Y$ dados os valores de $X$ então é relacionada a $\eta$ por uma função de ligação invertível $m()$ como $\mu = m(\eta)$. A implementação de modelos assim é pela função "glm".
+
+## Duas Extensões do Modelo Linear
+
+No exemplo anterior, usamos um tipo de modelo linear generalizado para avaliar a performance de certos e-mails de spam. Afinal, qual é a diferença ente um ``lm()`` que vimos antes e o novo modelo ``glm()``? Vamos simular dados ``x1``, ``x2`` e ``y`` para avaliar.
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+x1 = rep(1:10, 2) # números de 1 a 10
+x2 = rchisq(20, df=2) #números aleatorios com distribuição chi-quadrado com 2 graus de liberdade
+y = rnorm(20, mean = x1 + 2*x2, sd=2) # numeros aleatorios com ditribuição normal
+reg.lm = lm(y ~ x1 + x2) 
+summary(reg.lm)
+reg.glm = glm(y ~ x1 + x2, family = gaussian) 
+```
+
+## Duas Extensões do Modelo Linear
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+summary(reg.glm)
+```
+
+## Duas Extensões do Modelo Linear
+
+Observe que estimamos os _mesmos_ parâmetros. No entanto, o modelo linear generalizado não apresenta uma estatística F, mas sim o Critério de Informação de Akaike (AIC). Podemos resgatar o AIC através da função ``AIC()`` e devemos interpreta-lo com a regra: quanto menor, melhor. Ao compararmos dois modelos pelo Critério de Akaike, devemos priorizar o com o menor.
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+AIC(reg.glm)
+AIC(reg.lm)
+```
+
+Chegamos nas mesmas conclusões de duas maneiras diferentes.
+
+## Duas Extensões do Modelo Linear
+
+\textbf{Modelos Não-Lineares}
+
+\bigskip
+
+Chamamos os modelos que vimos até agora de \emph{lineares} porque sempre que estimamos um coeficiente ele é uma constante multiplicando um termo (esse sim, não precisa ser linear). Modelos não-lineares permitem relações mais complexas, como por exemplo o exponencial:
+
+\begin{align}
+Y_i = \beta_0 e^{-\beta_1 x_i} + \epsilon_i
+\end{align}
+
+Observe aqui que esse modelo não é mais linear nos parâmetros.
+
+## Duas Extensões do Modelo Linear
+
+Modelos mais gerais poderiam ter mais preditores e outros tipos de erros, como multiplicativos. As possibilidades parecem infinitas, mas na verdade são limitadas pelo problema que estamos modelando. Ao usar modelos não-lineares, normalmente temos uma ideia de quais tipos de modelos são apropriados para os dados e cabem apenas aqueles. Se o modelo tiver erros i.i.d. que são normalmente distribuídos, então usando o método dos mínimos quadrados podemos encontrar estimativas de parâmetros e usar o AIC para comparar modelos. Podemos estimar modelos dessa natureza com a função "nls".
+
+## Duas Extensões do Modelo Linear
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+library("nlstools")
+xdata = c(-2,-1.64,-1.33,-0.7,0,0.45,1.2,1.64,2.32,2.9)
+ydata = c(0.699369,0.700462,0.695354,1.03905,1.97389,2.41143,1.91091,
+          0.919576,-0.730975,-1.42001)
+plot(xdata,ydata)
+
+```
+
+## Duas Extensões do Modelo Linear
+
+```{r, echo=T, eval=T, results='markup', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+p1 = 1
+p2 = 0.2
+fit = nls(ydata ~ p1*cos(p2*xdata) + p2*sin(p1*xdata), start=list(p1=p1,p2=p2))
+summary(fit)
+```
+
+## Duas Extensões do Modelo Linear
+
+```{r, echo=T, eval=T, results='asis', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+new = data.frame(xdata = seq(min(xdata),max(xdata),len=200))
+plot(xdata,ydata)
+lines(new$xdata,predict(fit,newdata=new))
+
+```
+
+# Introdução à Machine Learning
+## Introdução à Machine Learning
+
+Para concluir nossa *Formação Cientista de Dados*, vamos fazer uma introdução à área de **Machine Learning**, que tem estado em voga nos últimos anos. Você aprenderá nessa introdução:
+
+\begin{itemize}
+
+  \item As origens e aplicações práticas de machine learning;
+  
+  \item Como transformar dados e conhecimento em ação;
+  
+  \item Como adequar algoritmos de machine learning a dados reais.
+
+\end{itemize}
+
+## Introdução à Machine Learning
+
+Diversos aspectos da nossa vida são registrados. Governos, administradores e indivíduos estão todo o tempo registrando e reportando informação. Esse dilúvio de dados tem levado muitos a constatar que vivemos uma era de \textbf{Big Data}, mas isso pode ser um termo impróprio. Isto porque, temos estado desde sempre cercados de um amontado de dados. O que diferencia a era atual é que temos um vasto conjunto de \emph{dados registrados}. Essa riqueza de informações tem o potencial de gerar ação, dada uma sistematização que transforme conjuntos de informação aparentemente confusos que façam sentido.
+
+## Introdução à Machine Learning
+
+O campo de estudo interessado no desenvolvimento de algoritmos que transformam dados em ações inteligentes é conhecido como \textbf{machine learning}. Esse campo se originou em um ambiente onde dados disponíveis, métodos estatísticos e poder computacional rápido e simultaneamente se desenvolveram. O crescimento dos dados gera uma necessidade de poder computacional, o que por sua vez transborda para o desenvolvimento de métodos estatísticos para analisar grandes conjuntos de dados. Isso criou um ciclo de progresso, permitindo que conjuntos ainda maiores e mais interessantes de dados pudessem ser coletados. 
+
+## Introdução à Machine Learning
+
+Machine learning é mais bem sucedido quando ela aumenta ao invés de substituir um conhecimento especializado de um assunto específico. Ela funciona com médicos em busca da cura do câncer, programadores comprometidos em construir casas e automovéis inteligentes ou ajudando cientistas sociais a construir conhecimento sobre como as sociedades funcionam. Algumas outras aplicações podem ser listadas abaixo:
+
+## Introdução à Machine Learning
+
+\begin{itemize}
+
+  \item Identificação de mensagens indesejáveis;
+  
+  \item Segmentação do comportamento de consumidores para propaganda direcionada;
+  
+  \item Previsão do tempo e de mudanças climáticas de longo-termo;
+  
+  \item Redução de fraudes em transações de cartão de crédito;
+  
+  \item Estimativas atuariais de danos financeiros associados a tempestades e desastres naturais;
+  
+  \item Previsão de eleições;
+  
+  \item Desenvolvimento de algoritmos para drones e carros sem motoristas;
+  
+  \item Otimização do consumo de energia em casas e escritórios;
+  
+  \item Projeção de áreas onde é mais provável ocorrer crimes;
+  
+  \item Descobrimento de sequências genéticas associadas a doenças.
+  
+\end{itemize}
+
+## Introdução à Machine Learning
+
+\textbf{Como as máquinas aprendem?}
+
+\bigskip
+
+Uma definição formal de machine learning foi proposta por Tom M. Mitchell: \texttt{Maquinas aprendem sempre que são capazes de utilizar suas experiências de modo que essa performance melhora uma experiência similar no futuro}. Embora essa definição seja intuitiva, ela ignora por completo o processo exato sobre como essa experiência é transformada em ação futura. 
+
+## Introdução à Machine Learning
+
+Enquanto o cérebro humano é naturalmente capaz de aprender desde o nascimento, as condições necessárias para que computadores aprendam precisam ser especificadas. Por essa razão, embora não seja estritamente necessário entender as bases teóricas do processo de aprendizado, essa fundação ajuda a entender, distinguir e implementar algoritmos de machine learning. 
+
+## Introdução à Machine Learning
+
+Em termos gerais, o processo de aprendizado pode ser dividido em quatro componentes:
+
+\begin{itemize}
+
+  \item \textbf{Armazenamento de dados}: utiliza observação, memória e recordações para prover uma base factual para aumentar o raciocínio;
+  
+  \item \textbf{Abstração}: envolve a tradução de dados armazenados em representações e conceitos mais amplos;
+  
+  \item \textbf{Generalização}: usa dados abstraídos para criar conhecimento e inferências que direcionam ações em novos contextos;
+  
+  \item \textbf{Avaliação}: provê um mecanismo de feedback para medir a utilidade do conhecimento aprendido e informar possíveis melhorias.
+
+\end{itemize}
+
+## Introdução à Machine Learning
+
+\textbf{Machine Learning na prática}
+
+Até aqui, temos focado como machine learning trabalha em teoria. De modo a aplicar o processo de aprendizado a tarefas do mundo real, nós podemos utilizar um processo de cinco etapas:
+
+\begin{itemize}
+
+  \item \textbf{Coleta de dados}: envolve reunir o material de aprendizado que o algoritmo irá usar para gerar conhecimento tangível;
+  
+  \item \textbf{Exploração de dados e preparação}: A qualidade de qualquer projeção de machine learning está de longe baseada na qualidade dos dados imputados. Por isso, é importante aprender mais sobre os dados e seus nuances durante o processo de \emph{exploração}. Um trabalho adicional é necessário para preparar os dados para o processo de aprendizagem. Isso envolve corrigir ou limpar dados desestruturados, eliminando dados desnecessários e guardando os dados conforme as expectativas de aprendizado;
+
+\end{itemize}
+
+## Introdução à Machine Learning
+
+\begin{itemize}
+
+  \item \textbf{Treinamento do modelo}: Desde que os dados estão preparados para a análise, você está pronto para ter alguma dimensão sobre o que pode ser aprendido a partir dos dados. A tarefa específica de machine learning irá informar o algoritmo apropriado e este irá representar os dados na forma de um modelo;
+  
+  \item \textbf{Avaliação do modelo}: Dado que cada modelo de machine learning resulta em uma solução viesada para o problema de aprendizado, é importante avaliar quão bem o algoritmo aprende a partir dessa experiência. A depender do tipo de modelo usado, você pode ser capaz de avaliar a acurácia do modelo usando um conjunto de dados de teste (\emph{dataset test}) ou criar medidas de performance específicas para uma dada aplicação;
+
+\end{itemize}
+
+## Introdução à Machine Learning
+
+\begin{itemize}
+
+  \item \textbf{Aperfeiçoamento do modelo}: Se uma melhor performance for necessário, pode ser importante utilizar estratégias mais avançadas de modo a aumentar a acurácia do modelo. Em alguns casos, pode ser necessário mudar o tipo de modelo, adicionar outras variáveis ou mesmo refazer o trabalho de preparação dos dados.
+  
+\end{itemize}
+
+## Introdução à Machine Learning
+
+\textbf{Tipos de algoritmos}
+
+Algoritmos de machine learning são divididos em categorias de acordo com os seus propósitos. Entender as categorias dos algoritmos de aprendizado é um primeiro passo essencial na direção de usar os dados para direcionar uma ação desejada. 
+
+\bigskip
+
+Um \textbf{modelo de previsão} é utilizado para tarefas que como o nome diz exigem a previsão de um valor utilizando outros valores do conjunto de dados. O algoritmo de aprendizado busca descobrir e modelar a relação entre o \emph{objetivo}, a variável a ser prevista, e outras variáveis. Dado que em modelos de previsão está muito claro sobre o que e como eles precisam aprender, o processo de treinar um modelo de previsão é conhecido como \textbf{aprendizado supervisionado}. Dado um conjunto de dados, um algoritmo de aprendizado supervisionado busca otimizar um função - o modelo - de modo a encontrar uma combinação de valores que resultam no \emph{output} esperado. 
+
+## Introdução à Machine Learning
+
+A tarefa de machine learning supervisionada frequentemente utilizada para prever a qual categoria pertence um exemplo é conhecida como \textbf{classificação}. Potenciais usos:
+
+\begin{itemize}
+
+  \item Um e-mail é um spam;
+  
+  \item Uma pessoa tem câncer;
+  
+  \item Um time de futebol irá perder ou ganhar;
+  
+  \item Um tomador não irá pagar um empréstimo.
+  
+\end{itemize}
+
+## Introdução à Machine Learning
+
+Em algoritmos de classificação, o objetivo a ser previsto é um aspecto categórico conhecido como \textbf{classe} e é dividida em categorias chamadas de \textbf{níveis}. Algoritmos supervisionados podem ser utilizados também para \textbf{previsões numéricas}.
+
+\bigskip
+
+Um \textbf{modelo descritivo}, por outro lado, é utilizado para tarefas que se beneficiam dos insights gerados pela sumarização dos dados em um novo e interessante modo. Como oposição aos modelos preditivos que prevem um objetivo de interesse, em um modelo descritivo, uma variável não é mais importante do que outra. Dado que não um objetivo implícito a ser aprendido, o processo de treinamento de um modelo descritivo é conhecimento como \textbf{aprendizado não supervisionado}. 
+
+## Introdução à Machine Learning
+
+Uma tarefa de modelagem descritiva conhecida como \textbf{detecção de padrões} é utilizada, por exemplo, para identificar associações úteis nos dados. Já a tarefa de dividir um conjunto de dados em grupos homogêneos é chamada de \textbf{clustering}. 
+
+\bigskip
+
+Por fim, uma classe de algoritmos de machine learning conhecida como \textbf{meta-aprendizagem} não está associada a uma tarefa de aprendizado específica, mas por outro lado está focada em como aprender mais efetivamente. 
+
+## Introdução à Machine Learning
+
+\textbf{Dados de entrada e algoritmos}
+
+Abaixo, listamos os tipos gerais de algoritmos de machine learning de acordo com as tarefas de aprendizado. Primeiro os algoritmos de aprendizado supervisionado com os nomes em inglês:
+
+\begin{center}
+\begin{small}
+\begin{tabular}{|c|c|}
+	\hline  Nearest Neighbor & Classificação  \\ 
+	\hline  Naive Bayes & Classificação  \\ 
+	\hline  Decision Trees & Classificação  \\ 
+	\hline  Classification Rule Learners & Classificação  \\ 
+	\hline  Linear Regression & Previsão numérica  \\ 
+	\hline  Regression Trees & Previsão numérica  \\ 
+	\hline  Model Trees & Previsão numérica  \\ 
+	\hline  Neural Networks & Uso dual  \\ 
+	\hline  Support Vector Machine & Uso dual  \\ 
+	\hline 
+\end{tabular} 
+\end{small}
+\end{center}
+
+## Introdução à Machine Learning
+
+Abaixo, algoritmos de aprendizado não supervisionado.
+
+\bigskip
+
+\begin{center}
+\begin{small}
+\begin{tabular}{|c|c|}
+	\hline  Association Rules & Detecção de padrões   \\
+	\hline  k-means clustering & Clustering \\
+	\hline
+\end{tabular} 
+\end{small}
+\end{center}
+
+## Introdução à Machine Learning
+
+Por fim, os algoritmos de meta-aprendizagem.
+
+\bigskip
+
+\begin{center}
+\begin{small}
+\begin{tabular}{|c|c|}
+	\hline  Bagging & Uso dual   \\
+	\hline  Boosting & Uso dual \\
+	\hline  Random Forests & Uso dual \\
+	\hline
+\end{tabular} 
+\end{small}
+\end{center}
+
+
+## Introdução à Machine Learning
+
+Machine learning se origina da intersecção entre estatística, bases de dados e ciência da computação. É uma poderosa ferramenta, capaz de encontrar insights interessantes em grandes conjuntos de dados.
+
+\bigskip
+
+Conceitualmente, o aprendizado envolve a abstração dos dados em uma representação estruturada e a generalização dessa estrutura em uma ação em que sua utilidade pode ser avaliada. Em termos práticos, utiliza-se dados contendo exemplos e amostras de onde pode ser aprendido algo útil. Sumarizamos esses dados na forma de um modelo, que pode ser utilizado para previsão ou propósitos descritivos. Esses propósitos podem ser agrupar em tarefas, incluindo classificação, previsão numérica, detecção de padrões e \emph{clustering}. Algoritmos de machine learning são escolhidos de acordo com os dados de entrada e a tarefa de aprendizagem. 

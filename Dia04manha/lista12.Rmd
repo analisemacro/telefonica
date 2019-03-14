@@ -1,0 +1,98 @@
+---
+title: "Curso de Introdução à Estatística usando o R"
+author: "Lista de Exercícios 12"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Exemplo 1
+
+Considere $15$ sujeitos divididos em $3$ grupos. Cada grupo é designado para um mês e coletamos quantas calorias são consumidas por cada indivíduo. A pergunta: será que a quantidade de calorias consumidas é maior em alguns meses e menor em outros? Ou será que são iguais? Podemos manualmente computar um teste F:
+
+```{R}
+maio = c(2166, 1568, 2233, 1882, 2019)
+setembro = c(2279, 2075, 2131, 2009, 1793)
+dezembro = c(2226, 2154, 2583, 2010, 2190)
+xmedia = mean(c(maio, setembro, dezembro))
+SQT = 5*((mean(maio)-xmedia)^2+(mean(setembro)-xmedia)^2+(mean(dezembro)-xmedia)^2)
+SQT ## soma dos quadrados totais
+SQE = (5-1)*var(maio)+(5-1)*var(setembro)+(5-1)*var(dezembro)
+SQE # soma dos quadrados explicados
+F.obs=(SQT/(3-1)) / (SQE/(15-3)) #computamos a estatistica F
+pf(F.obs,3-1,15-3, lower.tail = FALSE) # achamos p p-valor do teste
+```
+
+O p-valor não é significativo a $5\%$, o que indica que as médias de consumo dos dados coletados não são diferentes em diferentes meses do ano. Portanto, a diferença observada é atribuída à amostragem.
+
+Podemos avaliar isso com um ANOVA, pela função ``oneway.test()``. Precisamos antes criar um dataframe com as medidas e um fator indicando de que mês cada medida é. Felizmente - e para nossa conveniência -  a função ``stack()`` faz exatamente isso. Basta alimentar à ela um objeto de classe ``list`` com nomes que ela devolve um objeto de classe ``data.frame`` apropriado.
+
+```{R}
+ d = stack(list(maio = maio, 
+                setembro = setembro,
+                dezembro = dezembro))
+names(d) #retornando dois valores
+oneway.test(values ~ ind, data = d, var.equal = TRUE) 
+```
+
+Encontramos o mesmo p-valor, como esperado. Podemos também usar a função ``aov()`` para realizar um ANOVA.
+
+```{R}
+anova = aov(values ~ ind, data = d)
+summary(anova)  
+```
+
+É reconfortante ver o mesmo resultado aparecer de novo. Fizemos tudo certo até aqui. Essas são três maneiras de computar um teste de um sentido.
+
+# Exemplo 2
+
+Será que a administração de um aeroporto prefere uma empresa à outra e induz tempos diferentes de espera nos vôos? Vamos usar os dados da base ``ewr``, contida no pacote ``UsingR`` e nossas ferramentas para averiguar isso.
+
+```{R, message = FALSE, warning = FALSE}
+library(UsingR)
+data("ewr")
+head(ewr)
+ewr.saidas = subset(ewr, subset=  inorout == "out", select = 3:10) # só saídas
+saidas = stack(ewr.saidas) # usando stack()
+names(saidas) = c("tempo", "empresa")  #nomeando o dataframe
+# agora rodamos um modelo linear com fatores
+reg = lm(tempo ~ empresa, data = saidas)
+summary(reg) 
+```
+
+Encontramos alguns parâmetros estatisticamente significantes e a regressão como um todo é significante - como aponta a estatística F. A empresa CO tem um tempo maior de espera, a NW menor, por exemplo. 
+
+# Exemplo 3
+
+Será que mães fumantes têm bebês com menor peso? Vamos usar os dados da base ``babies``, do pacote ``UsingR`` e ANCOVAs para responder isso.
+
+
+```{R}
+data(babies)
+reg = lm(wt ~ wt1 + factor(smoke), data = babies)
+# explicando peso do bebê com o peso da mãe e se fuma ou não
+reg2 = lm(wt ~ wt1, data = babies)
+# somente pelo peso da mãe
+anova(reg, reg2)
+```
+
+De fato, o p-valor baixíssimo apoia fortemente a hipótese de que hábitos de fumo de mães afetam o peso de seus filhos.
+
+
+# Questão 1
+
+Os dados da base ``ToothGrowth``, do pacote ``UsingR`` contém medidas de tamanho de dentes (``len``) para diferentes dosagens de vitamina C (``dose``) e métodos de entrega (``supp``). Com análise de variância, é possível dizer que o método de entrega afeta o tamanho do dente.
+
+# Questão 2
+
+A base ``grip`` contém dados de performance de skiis diferentes. O tipo está na variável ``grip.type``. É possível dizer que as médias de performance são diferentes para tipos diferentes de skiis?
+
+# Questão 3
+
+Para a base ``mtcars``, execute uma análise de variância unidirecional da variável ``mpg`` modelada por ``cyl``, o número de cilindros. Use a função ``factor()``, pois ``cyl`` é armazenada como variável numérica
+
+# Questão 4
+
+A base ``Traffic`` do pacote ``MASS`` tem dados de morte no trânsito, o ano da coleta de dados e uma variável categórica indicado se havia um limite legal de velocidade. É possível dizer que o limite alterou o número de mortes no trânsito?
