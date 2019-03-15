@@ -1,0 +1,220 @@
+---
+title: "Formação Cientista de Dados"
+subtitle: "Dia 05 - Laboratório"
+author: "Vítor Wilher"
+output: 
+  beamer_presentation:
+    #theme: "Boadilla"
+    slide_level: 2
+    fig_width: 8
+    fig_height: 4
+    fig_caption: true
+    citation_package: 'natbib'
+    includes:
+      in_header: beamer.txt
+      before_body: toc.txt
+bibliography: 'references.bib'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+```
+
+
+
+# Pacotes para Data Science
+## Pacotes para Data Science
+
+![Pacotes do `tidyverse`](tidyverse.png)
+
+# Pacotes para Banco de Dados
+## Pacotes para Banco de Dados
+
+\begin{itemize}
+
+  \item \textbf{DBI} - Pacote para interação com \emph{sistemas de gerenciamento de bases de dados}. Ver \href{https://cran.r-project.org/web/packages/DBI/index.html}{aqui};
+  
+  \item \textbf{RODBC} - Pacote para bases de dados ODBC. Ver \href{https://cran.r-project.org/web/packages/RODBC/index.html}{aqui};
+  
+  \item \textbf{RJDBC} - Pacote para bases de dados JDBC. Ver \href{https://cran.r-project.org/web/packages/RJDBC/index.html}{aqui};
+  
+  \item \textbf{data.table} - Pacote para tornar mais rápido a leitura e tratamento de dados em \texttt{data frames}. Ver \href{https://cran.r-project.org/web/packages/data.table/index.html}{aqui};
+  
+  \item Diversos pacotes para leitura de extensões externas, como xlsx, xml, json, sas, spss, stata, etc.
+  
+  \item \textbf{sqldf} - Manipulação de R data frames com SQL;
+  
+\end{itemize}
+
+
+# Exemplo SQL
+## Exemplo SQL
+
+O pacote RSQLite permite fazer a conexão com \emph{databases} SQL, totalmente compatível com interfaces DBI. Assim, vamos instalar os pacotes abaixo para começar nossa integração com o mundo SQL.   
+
+```{r, echo=T, eval=F, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+install.packages('DBI')
+install.packages('RSQLite')
+
+```
+
+## Exemplo SQL
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+library(RSQLite)
+library(DBI)
+
+```
+
+## Exemplo SQL
+
+Agora, podemos criar uma conexão com uma database. No caso abaixo, estamos criando uma conexão vazia apenas como exercício. Vamos adicionar coisas a ela daqui a pouco.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+con <- dbConnect(RSQLite::SQLite(), ":memory:") # Substituir por sua database
+dbListTables(con)
+
+```
+
+
+## Exemplo SQL
+
+Uma vez criada a conexão podemos adicionar um \emph{dataset} apenas para ver algumas funções.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+  
+dbWriteTable(con, "mtcars", mtcars)
+dbListTables(con)
+dbListFields(con, "mtcars")
+```
+
+## Exemplo SQL
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+dbReadTable(con, "mtcars")
+
+```
+
+
+## Exemplo SQL
+
+Vamos agora usar um \emph{SQL query} para pegar todos os dados quando \texttt{cyl=4}, como abaixo.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+res <- dbSendQuery(con, "SELECT * FROM mtcars WHERE cyl = 4")
+dbFetch(res)
+
+
+```
+
+## Exemplo SQL
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+
+res <- dbSendQuery(con, "SELECT * FROM mtcars WHERE cyl = 4")
+while(!dbHasCompleted(res)){
+  chunk <- dbFetch(res, n = 5)
+  print(nrow(chunk))
+}
+
+```
+
+## Exemplo SQL
+
+Limpe os resultados e feche a conexão com a \emph{database} com as funções abaixo.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+dbClearResult(res)
+dbDisconnect(con)
+
+```
+
+## Exemplo SQL
+
+É possível executar funções SQL com o pacote \textbf{sqldf}. Instale-o e carregue-o no RStudio. Carregue também o pacote \textbf{PASWR}. Vamos utilizar o \emph{dataset} \emph{titanic3} desse pacote para exemplificar algumas funções SQL.
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+library(sqldf)
+library(PASWR)
+data("titanic3")
+
+```
+
+## Exemplo SQL
+
+Uma vez que tenha carregado esses pacotes e \emph{dataset}, utilize a função \texttt{sqldf} para contar o número de linhas do dataset \texttt{titanic3}. Utilizando funções do R, como seria?
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+sqldf("select count(*) from titanic3")
+nrow(titanic3)
+
+
+```
+
+## Exemplo SQL
+
+Selecione agora todas as linhas e colunas do objeto titanic3 e coloque em um novo objeto, chamado \texttt{TitanicData} com a função sqldf. Utilizando funções do R, como seria?
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+TitanicData <- sqldf("select * from titanic3")
+TitanicData <- titanic3[ , ]
+
+```
+
+
+## Exemplo SQL
+
+Selecione as duas primeiras colunas do objeto titanic3 e coloque em um objeto chamado \texttt{TitanicSubset2Cols} com a função sqldf. Utilizando funções do R, como seria?
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+colnames(titanic3)
+TitanicSubset2Cols <- sqldf("select pclass,survived 
+                            from titanic3")
+
+
+```
+
+
+## Exemplo SQL
+  
+Faça o \emph{print} das seis primeiras linhas do objeto titanic3 com a função sqldf. Utilizando funções do R, como seria?
+
+```{r, echo=T, eval=T, results='markup', fig.cap='', fig.width=8, fig.height=4, fig.align='center', out.width=".7\\linewidth", warning=FALSE, message=FALSE, size='tiny'}
+
+sqldf("select * from titanic3 limit 6")
+
+```
+
+# Exemplo de BI
+## Exemplo de BI
+
+O script \texttt{purchases.R} traz um exemplo de clusterização em vendas de telefone celular.
+
+# Produção de Relatórios e Apresentações
+## Produção de Relatórios e Apresentações
+
+Vamos mostrar agora como é possível integrar todas as etapas de data science com o R, comunicando os resultados encontrados através de relatórios e apresentações.
+
+# Exemplo de Machine Learning
+## Exemplo de Machine Learning
+
+O arquivo \texttt{ml.Rmd} traz um exemplo de aplicação de algoritmos de ML a um problema de retenção de clientes em uma empresa de telefonia. 
+
