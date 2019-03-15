@@ -123,3 +123,38 @@ p17 <- ggplot(churn, aes(x=tenure_group)) + ggtitle("Tenure Group") + xlab("Tenu
   geom_bar(aes(y = 100*(..count..)/sum(..count..)), width = 0.5) + ylab("Percentage") + coord_flip() + theme_minimal()
 grid.arrange(p13, p14, p15, p16, p17, ncol=2)
 
+
+################ Modelagem #############################
+
+## Dividir a amostra em trainning e test
+
+intrain <- createDataPartition(churn$Churn,p=0.7,list=FALSE)
+set.seed(2017)
+training <- churn[intrain,]
+testing <- churn[-intrain,]
+
+dim(training); dim(testing)
+
+## Modelo logit
+
+LogModel <- glm(Churn ~ .,family=binomial(link="logit"),
+                data=training)
+
+print(summary(LogModel))
+
+## Verificar a acurácia do modelo logit
+
+testing$Churn <- as.character(testing$Churn)
+testing$Churn[testing$Churn=="No"] <- "0"
+testing$Churn[testing$Churn=="Yes"] <- "1"
+fitted.results <- predict(LogModel,newdata=testing,type='response')
+fitted.results <- ifelse(fitted.results > 0.5,1,0)
+misClasificError <- mean(fitted.results != testing$Churn)
+print(paste('Logistic Regression Accuracy',1-misClasificError))
+
+logit = cbind(as.numeric(testing$Churn), 
+              as.numeric(fitted.results))
+teste = ifelse(logit[,1]==logit[,2], "Sim", "No")
+sum(teste=="Sim")/nrow(logit)
+sum(teste=="No")/nrow(logit)
+
