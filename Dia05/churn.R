@@ -135,7 +135,7 @@ testing <- churn[-intrain,]
 
 dim(training); dim(testing)
 
-## Modelo logit
+###### Modelo logit
 
 LogModel <- glm(Churn ~ .,family=binomial(link="logit"),
                 data=training)
@@ -158,3 +158,21 @@ teste = ifelse(logit[,1]==logit[,2], "Sim", "No")
 sum(teste=="Sim")/nrow(logit)
 sum(teste=="No")/nrow(logit)
 
+###### Decision Tree
+
+tree <- ctree(Churn~Contract+tenure_group+PaperlessBilling, 
+              training)
+
+plot(tree, type='simple')
+
+
+## Avaliar a acurácia do modelo ctree
+
+pred_tree <- predict(tree, testing)
+print("Confusion Matrix for Decision Tree"); table(Predicted = pred_tree, Actual = testing$Churn)
+
+p1 <- predict(tree, training)
+tab1 <- table(Predicted = p1, Actual = training$Churn)
+tab2 <- table(Predicted = pred_tree, Actual = testing$Churn)
+
+print(paste('Decision Tree Accuracy',sum(diag(tab2))/sum(tab2)))
